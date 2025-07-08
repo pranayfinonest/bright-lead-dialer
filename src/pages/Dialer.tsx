@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Phone, PhoneCall, PhoneOff, Pause, Play, Volume2, Mic, MicOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Phone, PhoneCall, PhoneOff, Pause, Play, Volume2, Mic, MicOff, Coffee, SkipForward, Clock, User, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,21 +7,36 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Dialer() {
   const [isDialing, setIsDialing] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [autoDialing, setAutoDialing] = useState(false);
   const [callDuration, setCallDuration] = useState("00:00");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
+  const [callNotes, setCallNotes] = useState("");
+  const [showDisposition, setShowDisposition] = useState(false);
 
-  const currentLead = {
-    name: "Rajesh Kumar",
-    phone: "+91 98765 43210",
-    email: "rajesh@email.com",
-    status: "Hot",
-    lastContact: "First call",
-    notes: "Interested in home loan. Prefers evening calls."
-  };
+  const callQueue = [
+    { name: "Rajesh Kumar", phone: "+91 98765 43210", email: "rajesh@email.com", status: "Hot", notes: "Interested in home loan" },
+    { name: "Priya Sharma", phone: "+91 87654 32109", email: "priya@email.com", status: "Warm", notes: "Looking for personal loan" },
+    { name: "Amit Patel", phone: "+91 76543 21098", email: "amit@email.com", status: "Cold", notes: "Credit card inquiry" },
+  ];
+
+  const currentLead = callQueue[currentLeadIndex];
+
+  const dispositions = [
+    { id: 'interested', label: 'Interested', color: 'bg-success', icon: CheckCircle },
+    { id: 'not_interested', label: 'Not Interested', color: 'bg-destructive', icon: XCircle },
+    { id: 'callback', label: 'Callback Required', color: 'bg-warning', icon: Clock },
+    { id: 'wrong_number', label: 'Wrong Number', color: 'bg-muted', icon: Phone },
+    { id: 'no_answer', label: 'No Answer', color: 'bg-secondary', icon: PhoneOff },
+    { id: 'busy', label: 'Busy', color: 'bg-orange-500', icon: AlertCircle },
+  ];
 
   const dialpadNumbers = [
     ['1', '2', '3'],
@@ -30,14 +45,29 @@ export default function Dialer() {
     ['*', '0', '#']
   ];
 
+  // Auto-dialing effect
+  useEffect(() => {
+    if (autoDialing && !isDialing && !isOnBreak && !showDisposition) {
+      const timer = setTimeout(() => {
+        handleCall();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoDialing, isDialing, isOnBreak, showDisposition, currentLeadIndex]);
+
   const handleDialpadClick = (number: string) => {
     setPhoneNumber(prev => prev + number);
   };
 
   const handleCall = () => {
+    if (isOnBreak) {
+      toast.error("You're on break. End break to start calling.");
+      return;
+    }
+    
     setIsDialing(!isDialing);
     if (!isDialing) {
-      // Start call simulation
+      toast.success(`Calling ${currentLead.name}...`);
       let seconds = 0;
       const timer = setInterval(() => {
         seconds++;
@@ -46,92 +76,141 @@ export default function Dialer() {
         setCallDuration(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
       }, 1000);
       
-      // Store timer to clear later
       (window as any).callTimer = timer;
     } else {
-      // End call
       if ((window as any).callTimer) {
         clearInterval((window as any).callTimer);
       }
       setCallDuration("00:00");
+      setShowDisposition(true);
+    }
+  };
+
+  const handleNextLead = () => {
+    setCurrentLeadIndex((prev) => (prev + 1) % callQueue.length);
+    setCallNotes("");
+    setShowDisposition(false);
+    toast.info("Moving to next lead");
+  };
+
+  const handleDisposition = (disposition: any) => {
+    toast.success(`Call marked as: ${disposition.label}`);
+    setShowDisposition(false);
+    setCallNotes("");
+    if (autoDialing) {
+      setTimeout(() => handleNextLead(), 1000);
+    }
+  };
+
+  const toggleBreak = () => {
+    setIsOnBreak(!isOnBreak);
+    if (!isOnBreak) {
+      setAutoDialing(false);
+      toast.info("Break started. Auto-dialing paused.");
+    } else {
+      toast.info("Break ended. Ready to dial.");
     }
   };
 
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Mobile-Optimized Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Auto Dialer</h1>
-            <p className="text-muted-foreground mt-1">
-              Make calls efficiently with our smart dialing system
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Auto Dialer</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Smart dialing with mobile optimization
             </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="gap-2">
-              <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-              Ready to Call
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className={`gap-2 ${isOnBreak ? 'bg-warning/10' : 'bg-success/10'}`}>
+              <div className={`w-2 h-2 rounded-full animate-pulse ${isOnBreak ? 'bg-warning' : 'bg-success'}`}></div>
+              {isOnBreak ? 'On Break' : 'Ready to Call'}
             </Badge>
+            <Button
+              size="sm"
+              variant={autoDialing ? "default" : "outline"}
+              onClick={() => setAutoDialing(!autoDialing)}
+              disabled={isOnBreak}
+            >
+              {autoDialing ? "Auto ON" : "Auto OFF"}
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Current Lead Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          {/* Mobile-Optimized Current Lead Info */}
           <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Current Lead</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                Lead {currentLeadIndex + 1} of {callQueue.length}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+            <CardContent className="space-y-3">
+              <div className="text-center p-4 bg-gradient-primary/10 rounded-lg">
                 <h3 className="font-semibold text-lg">{currentLead.name}</h3>
-                <p className="text-muted-foreground">{currentLead.phone}</p>
-                <p className="text-muted-foreground">{currentLead.email}</p>
+                <p className="text-muted-foreground text-sm">{currentLead.phone}</p>
+                <p className="text-muted-foreground text-xs">{currentLead.email}</p>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center">
                 <Badge className="bg-destructive text-destructive-foreground">
                   {currentLead.status}
                 </Badge>
-                <span className="text-sm text-muted-foreground">{currentLead.lastContact}</span>
               </div>
 
               <div>
-                <Label>Previous Notes</Label>
-                <p className="text-sm text-muted-foreground mt-1">{currentLead.notes}</p>
+                <Label className="text-sm">Previous Notes</Label>
+                <p className="text-sm text-muted-foreground mt-1 p-2 bg-muted/30 rounded">
+                  {currentLead.notes}
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="call-notes">Call Notes</Label>
+                <Label htmlFor="call-notes" className="text-sm">Call Notes</Label>
                 <Textarea 
                   id="call-notes"
                   placeholder="Add notes during the call..."
-                  className="min-h-[100px]"
+                  className="min-h-[80px] text-sm"
+                  value={callNotes}
+                  onChange={(e) => setCallNotes(e.target.value)}
                 />
               </div>
+
+              <Button 
+                variant="outline" 
+                className="w-full gap-2" 
+                onClick={handleNextLead}
+                disabled={isDialing}
+              >
+                <SkipForward className="h-4 w-4" />
+                Skip Lead
+              </Button>
             </CardContent>
           </Card>
 
-          {/* Dialer Interface */}
+          {/* Mobile-Optimized Dialer Interface */}
           <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Dialer Interface</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Dialer Controls</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Phone Number Display */}
                 <div className="text-center">
                   <Input
                     value={phoneNumber || currentLead.phone}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="text-xl text-center font-mono"
+                    className="text-lg md:text-xl text-center font-mono h-12"
                     placeholder="Enter phone number"
                   />
                 </div>
 
                 {/* Call Status */}
                 {isDialing && (
-                  <div className="text-center py-4">
+                  <div className="text-center py-3">
                     <div className="inline-flex items-center space-x-2 px-4 py-2 bg-success/10 rounded-full">
                       <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
                       <span className="text-success font-medium">Call Active - {callDuration}</span>
@@ -139,13 +218,13 @@ export default function Dialer() {
                   </div>
                 )}
 
-                {/* Dialpad */}
-                <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
+                {/* Mobile-Optimized Dialpad */}
+                <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
                   {dialpadNumbers.flat().map((number) => (
                     <Button
                       key={number}
                       variant="outline"
-                      className="h-12 w-12 text-lg font-semibold"
+                      className="h-12 w-full text-lg font-semibold touch-manipulation"
                       onClick={() => handleDialpadClick(number)}
                     >
                       {number}
@@ -153,13 +232,14 @@ export default function Dialer() {
                   ))}
                 </div>
 
-                {/* Call Controls */}
-                <div className="flex justify-center space-x-4">
+                {/* Mobile-Optimized Call Controls */}
+                <div className="flex justify-center items-center space-x-3">
                   <Button
                     size="lg"
                     variant={isDialing ? "destructive" : "default"}
-                    className="h-16 w-16 rounded-full"
+                    className="h-16 w-16 rounded-full touch-manipulation"
                     onClick={handleCall}
+                    disabled={isOnBreak}
                   >
                     {isDialing ? (
                       <PhoneOff className="h-8 w-8" />
@@ -173,42 +253,64 @@ export default function Dialer() {
                       <Button
                         size="lg"
                         variant="outline"
-                        className="h-16 w-16 rounded-full"
+                        className="h-14 w-14 rounded-full touch-manipulation"
                         onClick={() => setIsMuted(!isMuted)}
                       >
                         {isMuted ? (
-                          <MicOff className="h-6 w-6" />
+                          <MicOff className="h-5 w-5" />
                         ) : (
-                          <Mic className="h-6 w-6" />
+                          <Mic className="h-5 w-5" />
                         )}
                       </Button>
                       
                       <Button
                         size="lg"
                         variant="outline"
-                        className="h-16 w-16 rounded-full"
+                        className="h-14 w-14 rounded-full touch-manipulation"
                       >
-                        <Volume2 className="h-6 w-6" />
+                        <Volume2 className="h-5 w-5" />
                       </Button>
                     </>
                   )}
                 </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="gap-2">
-                    <PhoneCall className="h-4 w-4" />
-                    Schedule Callback
-                  </Button>
-                  <Button variant="outline" className="gap-2">
-                    <Pause className="h-4 w-4" />
-                    Mark as No Answer
+                {/* Break Controls */}
+                <div className="flex justify-center">
+                  <Button
+                    variant={isOnBreak ? "default" : "outline"}
+                    className="gap-2 touch-manipulation"
+                    onClick={toggleBreak}
+                  >
+                    <Coffee className="h-4 w-4" />
+                    {isOnBreak ? "End Break" : "Take Break"}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Disposition Dialog */}
+        <Dialog open={showDisposition} onOpenChange={setShowDisposition}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Call Disposition</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-3">
+              {dispositions.map((disposition) => (
+                <Button
+                  key={disposition.id}
+                  variant="outline"
+                  className={`h-16 flex flex-col gap-1 touch-manipulation ${disposition.color} text-white border-0`}
+                  onClick={() => handleDisposition(disposition)}
+                >
+                  <disposition.icon className="h-5 w-5" />
+                  <span className="text-xs">{disposition.label}</span>
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Call Queue */}
         <Card>
