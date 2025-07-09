@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Phone, PhoneCall, PhoneOff, Pause, Play, Volume2, Mic, MicOff, Coffee, SkipForward, Clock, User, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Phone, PhoneCall, PhoneOff, Pause, Play, Volume2, Mic, MicOff, Coffee, SkipForward, Clock, User, CheckCircle, XCircle, AlertCircle, Smartphone } from "lucide-react";
+import { useNativeCall } from "@/hooks/useNativeCall";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 
 export default function Dialer() {
-  const [isDialing, setIsDialing] = useState(false);
+  const { callState, isSupported, initiateCall, handleCallEnd, resetCall } = useNativeCall();
   const [isMuted, setIsMuted] = useState(false);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [autoDialing, setAutoDialing] = useState(false);
-  const [callDuration, setCallDuration] = useState("00:00");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [currentLeadIndex, setCurrentLeadIndex] = useState(0);
   const [callNotes, setCallNotes] = useState("");
@@ -47,42 +47,44 @@ export default function Dialer() {
 
   // Auto-dialing effect
   useEffect(() => {
-    if (autoDialing && !isDialing && !isOnBreak && !showDisposition) {
+    if (autoDialing && !callState.isActive && !isOnBreak && !showDisposition) {
       const timer = setTimeout(() => {
         handleCall();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [autoDialing, isDialing, isOnBreak, showDisposition, currentLeadIndex]);
+  }, [autoDialing, callState.isActive, isOnBreak, showDisposition, currentLeadIndex]);
+
+  // Auto-disposition when call ends
+  useEffect(() => {
+    if (callState.disposition && !showDisposition) {
+      setShowDisposition(true);
+    }
+  }, [callState.disposition, showDisposition]);
 
   const handleDialpadClick = (number: string) => {
     setPhoneNumber(prev => prev + number);
   };
 
-  const handleCall = () => {
+  const handleCall = async () => {
     if (isOnBreak) {
       toast.error("You're on break. End break to start calling.");
       return;
     }
     
-    setIsDialing(!isDialing);
-    if (!isDialing) {
-      toast.success(`Calling ${currentLead.name}...`);
-      let seconds = 0;
-      const timer = setInterval(() => {
-        seconds++;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        setCallDuration(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-      }, 1000);
+    if (!callState.isActive) {
+      const number = phoneNumber || currentLead.phone;
+      toast.success(`${isSupported ? 'Calling' : 'Dialing'} ${currentLead.name}...`);
       
-      (window as any).callTimer = timer;
-    } else {
-      if ((window as any).callTimer) {
-        clearInterval((window as any).callTimer);
+      const success = await initiateCall(number);
+      if (!success && !isSupported) {
+        // For web fallback, simulate call state
+        setTimeout(() => setShowDisposition(true), 3000);
       }
-      setCallDuration("00:00");
-      setShowDisposition(true);
+    } else {
+      // End call
+      handleCallEnd();
+      toast.info("Call ended");
     }
   };
 
@@ -97,6 +99,7 @@ export default function Dialer() {
     toast.success(`Call marked as: ${disposition.label}`);
     setShowDisposition(false);
     setCallNotes("");
+    resetCall();
     if (autoDialing) {
       setTimeout(() => handleNextLead(), 1000);
     }
@@ -116,23 +119,30 @@ export default function Dialer() {
     <Layout>
       <div className="space-y-6">
         {/* Mobile-Optimized Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center justify-between">
+          <div className="hidden md:block">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Auto Dialer</h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Smart dialing with mobile optimization
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={`gap-2 ${isOnBreak ? 'bg-warning/10' : 'bg-success/10'}`}>
+            <Badge variant="outline" className={`gap-2 text-xs ${isOnBreak ? 'bg-warning/10' : 'bg-success/10'}`}>
               <div className={`w-2 h-2 rounded-full animate-pulse ${isOnBreak ? 'bg-warning' : 'bg-success'}`}></div>
               {isOnBreak ? 'On Break' : 'Ready to Call'}
             </Badge>
+            {isSupported && (
+              <Badge variant="outline" className="gap-2 text-xs bg-primary/10">
+                <Smartphone className="w-3 h-3" />
+                Native Calling
+              </Badge>
+            )}
             <Button
               size="sm"
               variant={autoDialing ? "default" : "outline"}
               onClick={() => setAutoDialing(!autoDialing)}
               disabled={isOnBreak}
+              className="text-xs"
             >
               {autoDialing ? "Auto ON" : "Auto OFF"}
             </Button>
@@ -183,7 +193,7 @@ export default function Dialer() {
                 variant="outline" 
                 className="w-full gap-2" 
                 onClick={handleNextLead}
-                disabled={isDialing}
+                disabled={callState.isActive}
               >
                 <SkipForward className="h-4 w-4" />
                 Skip Lead
@@ -209,12 +219,24 @@ export default function Dialer() {
                 </div>
 
                 {/* Call Status */}
-                {isDialing && (
+                {callState.isActive && (
                   <div className="text-center py-3">
                     <div className="inline-flex items-center space-x-2 px-4 py-2 bg-success/10 rounded-full">
                       <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
-                      <span className="text-success font-medium">Call Active - {callDuration}</span>
+                      <span className="text-success font-medium">
+                        Call Active - {Math.floor(callState.duration / 60).toString().padStart(2, '0')}:
+                        {(callState.duration % 60).toString().padStart(2, '0')}
+                      </span>
                     </div>
+                  </div>
+                )}
+
+                {/* Call State Info */}
+                {callState.disposition && !callState.isActive && (
+                  <div className="text-center py-2">
+                    <Badge variant="secondary" className="text-xs">
+                      Last Call: {callState.disposition.replace('_', ' ').toUpperCase()}
+                    </Badge>
                   </div>
                 )}
 
@@ -236,19 +258,19 @@ export default function Dialer() {
                 <div className="flex justify-center items-center space-x-3">
                   <Button
                     size="lg"
-                    variant={isDialing ? "destructive" : "default"}
+                    variant={callState.isActive ? "destructive" : "call"}
                     className="h-16 w-16 rounded-full touch-manipulation"
                     onClick={handleCall}
                     disabled={isOnBreak}
                   >
-                    {isDialing ? (
+                    {callState.isActive ? (
                       <PhoneOff className="h-8 w-8" />
                     ) : (
                       <Phone className="h-8 w-8" />
                     )}
                   </Button>
                   
-                  {isDialing && (
+                  {callState.isActive && (
                     <>
                       <Button
                         size="lg"
