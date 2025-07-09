@@ -1,73 +1,164 @@
-# Welcome to your Lovable project
+# FINONEST TeleCRM - PHP Version
 
-## Project info
+A professional telecalling CRM system built with PHP, designed specifically for financial services, loan agents, and sales teams.
 
-**URL**: https://lovable.dev/projects/1f01c972-bdcb-4f3c-bb2e-f2311d937799
+## Features
 
-## How can I edit this code?
+- **Dashboard**: Comprehensive overview with real-time statistics
+- **Lead Management**: Track and manage prospects effectively
+- **Auto Dialer**: Smart calling system with native mobile support
+- **Campaign Management**: Create and manage calling campaigns
+- **Message Center**: WhatsApp, SMS, and Email templates
+- **Schedule Manager**: Manage calls, meetings, and follow-ups
+- **Analytics**: Performance insights and reporting
+- **Settings**: Comprehensive configuration options
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+- **Backend**: PHP 7.4+
+- **Database**: MySQL 5.7+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Styling**: Custom CSS with CSS Variables
+- **Icons**: Custom icon font
+- **Mobile**: Responsive design with mobile-first approach
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1f01c972-bdcb-4f3c-bb2e-f2311d937799) and start prompting.
+## Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd telecrm-php
+   ```
 
-**Use your preferred IDE**
+2. **Database Setup**
+   - Create a MySQL database named `telecrm`
+   - Import the schema: `mysql -u username -p telecrm < database/schema.sql`
+   - Update database credentials in `config/database.php`
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Web Server Configuration**
+   - Point your web server document root to the project directory
+   - Ensure PHP has write permissions for session handling
+   - Enable PHP extensions: PDO, PDO_MySQL
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+4. **Default Login**
+   - Email: `admin@finonest.com`
+   - Password: `password`
 
-Follow these steps:
+## File Structure
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+/
+├── config/
+│   └── database.php          # Database configuration
+├── includes/
+│   ├── auth.php             # Authentication functions
+│   ├── header.php           # Common header
+│   └── footer.php           # Common footer
+├── components/
+│   ├── sidebar.php          # Navigation sidebar
+│   ├── header-bar.php       # Top header bar
+│   ├── quick-actions.php    # Dashboard quick actions
+│   └── recent-activity.php  # Recent activity component
+├── assets/
+│   ├── css/
+│   │   ├── style.css        # Main stylesheet
+│   │   ├── auth.css         # Authentication styles
+│   │   └── icons.css        # Icon definitions
+│   ├── js/
+│   │   ├── main.js          # Main JavaScript
+│   │   └── dialer.js        # Dialer functionality
+│   └── images/              # Image assets
+├── api/                     # API endpoints
+├── database/
+│   └── schema.sql           # Database schema
+├── index.php                # Dashboard
+├── login.php                # Login page
+├── leads.php                # Lead management
+├── dialer.php               # Auto dialer
+├── campaigns.php            # Campaign management
+├── messages.php             # Message center
+├── schedule.php             # Schedule manager
+├── analytics.php            # Analytics dashboard
+└── settings.php             # Settings page
 ```
 
-**Edit a file directly in GitHub**
+## Key Features
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Dashboard
+- Real-time statistics and KPIs
+- Quick action buttons
+- Recent activity feed
+- Priority tasks overview
 
-**Use GitHub Codespaces**
+### Lead Management
+- Comprehensive lead database
+- Status tracking (Hot, Warm, Cold)
+- Search and filtering
+- Bulk operations
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Auto Dialer
+- Native mobile calling support
+- Call queue management
+- Call disposition tracking
+- Auto-dialing capabilities
+- Break management
 
-## What technologies are used for this project?
+### Campaign Management
+- Campaign creation and management
+- Lead assignment
+- Progress tracking
+- Performance analytics
 
-This project is built with:
+### Message Center
+- Template management
+- WhatsApp, SMS, Email support
+- Quick send functionality
+- Usage tracking
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Analytics
+- Call performance metrics
+- Agent performance tracking
+- Conversion analytics
+- Trend analysis
 
-## How can I deploy this project?
+## Security Features
 
-Simply open [Lovable](https://lovable.dev/projects/1f01c972-bdcb-4f3c-bb2e-f2311d937799) and click on Share -> Publish.
+- Session-based authentication
+- Password hashing with PHP's password_hash()
+- SQL injection prevention with prepared statements
+- XSS protection with htmlspecialchars()
+- CSRF protection ready
 
-## Can I connect a custom domain to my Lovable project?
+## Mobile Support
 
-Yes, you can!
+- Responsive design for all screen sizes
+- Mobile-optimized dialer interface
+- Touch-friendly controls
+- Native calling integration
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Browser Support
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Chrome 70+
+- Firefox 65+
+- Safari 12+
+- Edge 79+
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support and questions, please contact the development team.
+
+---
+
+**FINONEST TeleCRM** - Trust comes first.
