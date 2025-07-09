@@ -18,19 +18,35 @@ const Index = () => {
     <Layout>
       <div className="space-y-6">
         {/* Welcome Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Good morning, Sales Agent! 👋
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Ready to make today productive? You have 23 leads to call.
-            </p>
+        <div className="text-center py-8 border-b border-border mb-6">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <img 
+              src="/lovable-uploads/616a0c1b-31a6-4d33-8b87-22ae8b11270e.png" 
+              alt="FINONEST Logo" 
+              className="h-16 w-16 rounded-full"
+            />
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-foreground">FINONEST</h1>
+              <p className="text-lg text-muted-foreground">trust comes first</p>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-primary rounded-lg text-white shadow-medium">
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-4">
+            Professional telecalling platform designed for financial services, loan agents, and sales teams
+          </p>
+          <div className="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-primary rounded-lg text-white shadow-medium inline-flex">
             <Clock className="h-4 w-4" />
             <span className="text-sm font-medium">Active Session: 2h 15m</span>
           </div>
+        </div>
+
+        {/* Performance Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Good morning, Sales Agent! 👋
+          </h2>
+          <p className="text-muted-foreground">
+            Ready to make today productive? You have 23 leads to call.
+          </p>
         </div>
 
         {/* Stats Grid */}

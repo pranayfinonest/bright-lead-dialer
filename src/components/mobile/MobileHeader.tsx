@@ -37,7 +37,17 @@ export default function MobileHeader({ title, subtitle }: MobileHeaderProps) {
             </SheetTrigger>
             <SheetContent side="left" className="w-64">
               <div className="mt-6">
-                <h2 className="text-lg font-semibold mb-4">TeleCRM</h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <img 
+                    src="/lovable-uploads/616a0c1b-31a6-4d33-8b87-22ae8b11270e.png" 
+                    alt="FINONEST Logo" 
+                    className="h-8 w-8 rounded-full"
+                  />
+                  <div>
+                    <h2 className="text-lg font-semibold">FINONEST</h2>
+                    <p className="text-xs text-muted-foreground">trust comes first</p>
+                  </div>
+                </div>
                 <nav className="space-y-2">
                   {allNavigationItems.map((item) => (
                     <NavLink

@@ -11,7 +11,7 @@ interface LayoutProps {
 
 const getPageInfo = (pathname: string) => {
   switch (pathname) {
-    case "/": return { title: "Dashboard", subtitle: "Welcome back!" };
+    case "/": return { title: "Dashboard", subtitle: "Welcome to FINONEST" };
     case "/leads": return { title: "Leads", subtitle: "Manage your prospects" };
     case "/dialer": return { title: "Auto Dialer", subtitle: "Smart calling system" };
     case "/campaigns": return { title: "Campaigns", subtitle: "Manage campaigns" };
@@ -19,7 +19,7 @@ const getPageInfo = (pathname: string) => {
     case "/schedule": return { title: "Schedule", subtitle: "Your calendar" };
     case "/analytics": return { title: "Analytics", subtitle: "Performance insights" };
     case "/settings": return { title: "Settings", subtitle: "Configure your account" };
-    default: return { title: "TeleCRM", subtitle: "" };
+    default: return { title: "FINONEST", subtitle: "trust comes first" };
   }
 };
 
